@@ -115,6 +115,15 @@ final class Client implements FlushableClientInterface
     }
 
     /**
+     * @param array $event
+     * @return string|null
+     */
+    public function sendEvent(array $event): ?string
+    {
+        return $this->transport->sendArray($event);
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function captureLastError(?Scope $scope = null): ?string
@@ -161,7 +170,7 @@ final class Client implements FlushableClientInterface
      *
      * @return Event|null returns ready to send Event, however depending on options it can be discarded
      */
-    private function prepareEvent(array $payload, ?Scope $scope = null): ?Event
+    public function prepareEvent(array $payload, ?Scope $scope = null): ?Event
     {
         $sampleRate = $this->getOptions()->getSampleRate();
 

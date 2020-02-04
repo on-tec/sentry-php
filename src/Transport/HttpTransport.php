@@ -128,6 +128,38 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
     }
 
     /**
+     * @param array $event
+     * @return string|null
+     * @throws MissingProjectIdCredentialException
+     * @throws \Sentry\Exception\JsonException
+     */
+    public function sendArray(array $event): ?string
+    {
+        $projectId = $this->config->getProjectId();
+
+        if (null === $projectId) {
+            throw new MissingProjectIdCredentialException();
+        }
+
+        $request = $this->requestFactory->createRequest(
+            'POST',
+            sprintf('/api/%d/store/', $projectId),
+            ['Content-Type' => 'application/json'],
+            JSON::encode($event)
+        );
+
+        $promise = $this->httpClient->sendAsyncRequest($request);
+
+        if ($this->delaySendingUntilShutdown) {
+            $this->pendingRequests[] = $promise;
+        } else {
+            $promise->wait(false);
+        }
+
+        return $event['event_id'];
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function close(?int $timeout = null): PromiseInterface
